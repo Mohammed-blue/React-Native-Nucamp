@@ -12,6 +12,7 @@ import {
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Animatable from 'react-native-animatable';
+import * as Notifications from 'expo-notifications';
 
 
 const ReservationScreen = () => {
@@ -27,11 +28,43 @@ const ReservationScreen = () => {
         setDate(currentDate);
     };
 
+    // const handleReservation = () => {
+    //     console.log('campers:', campers);
+    //     console.log('hikeIn:', hikeIn);
+    //     console.log('date:', date);
+    //     setShowModal(!showModal);
+    // };
     const handleReservation = () => {
+        const message = `Number of Campers: ${campers}
+                            \nHike-In? ${hikeIn}
+                            \nDate: ${date.toLocaleDateString('en-US')}`;
+        Alert.alert(
+            'Begin Search?',
+            message,
+            [
+                {
+                    text: 'Cancel',
+                    onPress: () => {
+                        console.log('Reservation Search Canceled');
+                        resetForm();
+                    },
+                    style: 'cancel'
+                },
+                {
+                    text: 'OK',
+                    onPress: () => {
+                        presentLocalNotification(
+                            date.toLocaleDateString('en-US')
+                        );
+                        resetForm();
+                    }
+                }
+            ],
+            { cancelable: false }
+        );
         console.log('campers:', campers);
         console.log('hikeIn:', hikeIn);
         console.log('date:', date);
-        setShowModal(!showModal);
     };
 
     const resetForm = () => {
@@ -41,25 +74,57 @@ const ReservationScreen = () => {
         setShowCalendar(false);
     };
 
-    const getAlert = () =>
-                Alert.alert(
-                    'Begin Search',
-                    `Number of campers ${campers}\n\nHike-In? ${hikeIn}\n\nDate: ${date.toLocaleDateString()}`,
-                    [
-                        {
-                            text: 'Cancel',
-                            style: 'cancel',
-                            onPress: () => resetForm()
-                        },
-                        {
-                            text: 'OK',
-                            onPress: () => resetForm(),
-                            style: 'default'
-                        },
-                    ],
-                {
-            cancelable: true //allows for the back button to be clickable and cancel out the pop-up
-        })
+    // JavaScript ES8 syntax e.g. async, await
+    // using async gives an async function, which is a function that always returns a promise
+
+    const presentLocalNotification = async (reservationDate) => {
+        const sendNotification = () => {
+            Notifications.setNotificationHandler({
+                handleNotification: async () => ({
+                    shouldShowAlert: true,
+                    shouldPlaySound: true,
+                    shouldSetBadge: true
+                })
+            });
+
+            Notifications.scheduleNotificationAsync({
+                content: {
+                    title: 'Your Campsite Reservation Search',
+                    body: `Search for ${reservationDate} requested`
+                },
+                trigger: null
+            });
+        };
+
+        // The only time we can use the await keyword is inside an async function
+        let permissions = await Notifications.getPermissionsAsync();
+        if (!permissions.granted) {
+            permissions = await Notifications.requestPermissionsAsync();
+        }
+        if (permissions.granted) {
+            sendNotification();
+        }
+    };
+
+    // const getAlert = () =>
+    //             Alert.alert(
+    //                 'Begin Search',
+    //                 `Number of campers ${campers}\n\nHike-In? ${hikeIn}\n\nDate: ${date.toLocaleDateString()}`,
+    //                 [
+    //                     {
+    //                         text: 'Cancel',
+    //                         style: 'cancel',
+    //                         onPress: () => resetForm()
+    //                     },
+    //                     {
+    //                         text: 'OK',
+    //                         onPress: () => resetForm(),
+    //                         style: 'default'
+    //                     },
+    //                 ],
+    //             {
+    //         cancelable: true //allows for the back button to be clickable and cancel out the pop-up
+    //     })
 
     return (
         <ScrollView>
@@ -114,8 +179,8 @@ const ReservationScreen = () => {
                 )}
                 <View style={styles.formRow}>
                     <Button
-                        // onPress={() => handleReservation()}
-                        onPress={getAlert}
+                        onPress={() => handleReservation()}
+                        // onPress={getAlert}
                         title='Search Availability'
                         color='#5637DD'
                         accessibilityLabel='Tap me to search for available campsites to reserve'
