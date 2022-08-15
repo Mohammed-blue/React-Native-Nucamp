@@ -30,7 +30,8 @@ const DirectoryScreen = ({ navigation }) => {
     }
 
 
-    const renderDirectoryItem = ({ item: campsite }) => {
+    const renderDirectoryItem = ({ item: campsite }) =>
+    {
         return (
             <Animatable.View
                 animation='fadeInRightBig'
